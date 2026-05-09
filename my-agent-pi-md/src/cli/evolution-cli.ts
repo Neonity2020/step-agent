@@ -354,11 +354,15 @@ Be ${existingSoulMD?.content ? SoulMDParser.parse(existingSoulMD.content).speaki
         }))
       )
 
+      // 清理思考标签
+      const thinkPattern = /<think>[\s\S]*?<\/think>/gi
+      const cleanedContent = response.content.replace(thinkPattern, '').trim()
+
       console.log(color("\n🤖 Assistant", theme.assistantPrefix))
       console.log(color("─".repeat(40), theme.border))
-      console.log(renderMarkdown(response.content))
+      console.log(renderMarkdown(cleanedContent))
 
-      await sessionManager.addEntry("assistant", "assistant", response.content)
+      await sessionManager.addEntry("assistant", "assistant", cleanedContent)
 
       // 记录到进化系统
       evolutionManager.recordStep(`Assistant: ${response.content.slice(0, 100)}...`)
@@ -411,11 +415,14 @@ Be ${existingSoulMD?.content ? SoulMDParser.parse(existingSoulMD.content).speaki
             }))
           )
 
+          // 清理思考标签
+          const cleanedFollowUp = followUpResponse.content.replace(thinkPattern, '').trim()
+
           console.log(color("\n🤖 Assistant (continued)", theme.assistantPrefix))
           console.log(color("─".repeat(40), theme.border))
-          console.log(renderMarkdown(followUpResponse.content))
+          console.log(renderMarkdown(cleanedFollowUp))
 
-          await sessionManager.addEntry("assistant", "assistant", followUpResponse.content)
+          await sessionManager.addEntry("assistant", "assistant", cleanedFollowUp)
 
           // 如果 follow-up 也有工具调用，继续处理
           if (followUpResponse.toolCalls && followUpResponse.toolCalls.length > 0) {
