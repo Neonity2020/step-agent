@@ -27,9 +27,13 @@ function isMarkdownTableRow(line: string): boolean {
   // 排除分隔行
   if (isTableSeparator(trimmed)) return false
   
-  // 需要至少 2 个单元格
-  const cells = trimmed.split("|").filter(c => c.trim())
-  return cells.length >= 2
+  // 计算管道符数量：至少需要 3 个管道符（2列）才能构成有效表格行
+  // 例如：| A | B | 有 3 个管道符，| A | 有 2 个（单列，无效）
+  const pipeCount = (trimmed.match(/\|/g) || []).length
+  if (pipeCount < 3) return false
+  
+  // 需要至少 2 个单元格（通过管道符数量间接判断）
+  return true
 }
 
 // 解析表格单元格
