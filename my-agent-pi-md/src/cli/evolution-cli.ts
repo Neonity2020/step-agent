@@ -51,6 +51,7 @@ import { SandboxManager } from "../sandbox"
 import { handleSandboxCommand, setSandboxManager } from "./sandbox-cli"
 import { color, theme } from "../tui/colors"
 import { renderMarkdown } from "../tui/markdown"
+import { padVisibleEnd, truncateToWidth } from "../tui/utils"
 import { MCPClientManager, loadMCPConfig, COMMON_MCP_SERVERS } from "../mcp"
 import autoSavePlugin from "../extensions/plugins/auto-save"
 import gitPlugin from "../extensions/plugins/git"
@@ -265,10 +266,7 @@ async function main() {
   evolutionManager.startWorkflow("main-session")
 
   // 显示欢迎信息
-  printWelcome(existingSoulMD, existingPiMD, projectAnalysis.projectConfig, evolutionManager.getStats(), actualProviderName, actualModelName)
-
-  console.log(`${color("Session:", theme.statusBar)} ${color(session.meta.name, theme.statusBarHighlight)}`)
-  console.log(color("─".repeat(60), theme.border))
+  printWelcome(existingSoulMD, existingPiMD, projectAnalysis.projectConfig, evolutionManager.getStats(), actualProviderName, actualModelName, session.meta.name)
   console.log()
 
   // 交互循环
@@ -881,42 +879,68 @@ ${color("Run /sandbox for security options", theme.dim)}
 }
 
 // 打印欢迎
-function printWelcome(soulMD: any, piMD: any, projectConfig: any, evoStats: any, providerName: string, modelName: string): void {
+const BANNER_CONTENT_WIDTH = 60
+
+function bannerBorder(kind: "top" | "middle" | "bottom" = "middle"): string {
+  const chars = {
+    top: ["┌", "┐"],
+    middle: ["├", "┤"],
+    bottom: ["└", "┘"],
+  }[kind]
+
+  return color(`${chars[0]}${"─".repeat(BANNER_CONTENT_WIDTH)}${chars[1]}`, theme.border)
+}
+
+function bannerLine(text: string = "", textStyle: string = theme.statusBar, leftPadding = 1): string {
+  const contentWidth = Math.max(0, BANNER_CONTENT_WIDTH - leftPadding)
+  const clipped = truncateToWidth(text, contentWidth)
+  const padded = padVisibleEnd(`${" ".repeat(leftPadding)}${clipped}`, BANNER_CONTENT_WIDTH)
+  return color("│", theme.border) + color(padded, textStyle) + color("│", theme.border)
+}
+
+function printWelcome(soulMD: any, piMD: any, projectConfig: any, evoStats: any, providerName: string, modelName: string, sessionName?: string): void {
   const currentModel = getCurrentModel()
   const provider = getProvider(currentModel.providerId)
   const displayProvider = provider?.name || providerName || "Unknown"
   const displayModel = provider?.models.find(m => m.id === currentModel.modelId)?.name || modelName || "Unknown"
 
   console.clear()
-  console.log(`
-${color("┌────────────────────────────────────────────────────────────┐", theme.border)}
-${color("│", theme.border)}  ${color("My Agent - Skills Evolution", theme.assistantPrefix)}                             ${color("│", theme.border)}
-${color("├────────────────────────────────────────────────────────────┤", theme.border)}
-${color("│", theme.border)}  ${color("🧬 Skills Evolution - Self-improving Agent", theme.statusBarHighlight)}                   ${color("│", theme.border)}
-${color("│", theme.border)}  ${color("🎭 SOUL.md - Agent Personality", theme.statusBarHighlight)}                               ${color("│", theme.border)}
-${color("│", theme.border)}  ${color("📄 pi.md - Project Context", theme.statusBarHighlight)}                                 ${color("│", theme.border)}
-${color("├────────────────────────────────────────────────────────────┤", theme.border)}`)
+  console.log()
+  console.log(bannerBorder("top"))
+  console.log(bannerLine("My Agent - Skills Evolution", theme.assistantPrefix, 2))
+  console.log(bannerBorder("middle"))
+  console.log(bannerLine("🧬 Skills Evolution - Self-improving Agent", theme.statusBarHighlight, 2))
+  console.log(bannerLine("🎭 SOUL.md - Agent Personality", theme.statusBarHighlight, 2))
+  console.log(bannerLine("📄 pi.md - Project Context", theme.statusBarHighlight, 2))
+  console.log(bannerBorder("middle"))
 
   // 显示当前模型
-  console.log(color("│", theme.border) + color(` 🤖 Model: ${displayProvider} / ${displayModel}`.padEnd(60) + "│", theme.statusBarHighlight))
+  console.log(bannerLine(`🤖 Model: ${displayProvider} / ${displayModel}`, theme.statusBarHighlight))
 
   if (soulMD?.exists) {
-    console.log(color("│", theme.border) + color(` ✓ SOUL.md loaded`.padEnd(60) + "│", theme.statusBar))
+    console.log(bannerLine("✓ SOUL.md loaded", theme.statusBar))
   } else {
-    console.log(color("│", theme.border) + color(" ⚠ No SOUL.md (use /soul init)".padEnd(60) + "│", theme.warningText))
+    console.log(bannerLine("⚠ No SOUL.md (use /soul init)", theme.warningText))
   }
 
   if (piMD?.exists) {
-    console.log(color("│", theme.border) + color(` ✓ ${piMD.type} loaded`.padEnd(60) + "│", theme.statusBar))
+    console.log(bannerLine(`✓ ${piMD.type} loaded`, theme.statusBar))
   } else {
-    console.log(color("│", theme.border) + color(" ⚠ No pi.md (use /init)".padEnd(60) + "│", theme.warningText))
+    console.log(bannerLine("⚠ No pi.md (use /init)", theme.warningText))
   }
 
-  console.log(color("├────────────────────────────────────────────────────────────┤", theme.border))
-  console.log(color("│", theme.border) + color(` 🧬 Evolution: ${evoStats.workflowsDetected} workflows | ${evoStats.skillsPublished} skills`.padEnd(60) + "│", theme.statusBar))
-  console.log(color("├────────────────────────────────────────────────────────────┤", theme.border))
-  console.log(color("│", theme.border) + color(" Type /help or /model for commands".padEnd(60) + "│", theme.dim))
-  console.log(color("└────────────────────────────────────────────────────────────┘", theme.border))
+  if (projectConfig?.name) {
+    console.log(bannerLine(`Project: ${projectConfig.name}`, theme.statusBar))
+  }
+
+  console.log(bannerBorder("middle"))
+  console.log(bannerLine(`🧬 Evolution: ${evoStats.workflowsDetected} workflows | ${evoStats.skillsPublished} skills`, theme.statusBar))
+  console.log(bannerBorder("middle"))
+  if (sessionName) {
+    console.log(bannerLine(`Session: ${sessionName}`, theme.statusBar))
+  }
+  console.log(bannerLine("Type /help or /model for commands", theme.dim))
+  console.log(bannerBorder("bottom"))
 }
 
 // 运行

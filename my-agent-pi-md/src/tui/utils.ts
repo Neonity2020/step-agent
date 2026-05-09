@@ -196,6 +196,15 @@ export function visibleWidth(str: string): number {
 	return width;
 }
 
+/**
+ * Pad text to a target terminal column width.
+ * ANSI escape codes and wide grapheme clusters are measured by visible width.
+ */
+export function padVisibleEnd(text: string, width: number): string {
+	const padding = Math.max(0, width - visibleWidth(text));
+	return text + " ".repeat(padding);
+}
+
 // ============================================================
 // ANSI Code Tracker
 // ============================================================

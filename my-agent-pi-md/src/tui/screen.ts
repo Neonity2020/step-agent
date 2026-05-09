@@ -2,7 +2,7 @@
 // TUI Screen - 核心 TUI 渲染
 // ============================================================
 
-import { color, theme, colors, cursor, getTerminalSize } from "./colors"
+import { color, theme, cursor, getTerminalSize } from "./colors"
 import { MessageEntry, renderMessages, messageToEntry } from "./messages"
 import type { Message } from "../types"
 
@@ -60,9 +60,6 @@ export class TerminalUI implements TUIRenderer {
     // 绘制编辑器
     this.renderEditor()
 
-    // 绘制状态栏
-    this.renderStatusBar()
-
     // 移动光标到编辑器
     this.moveCursorToEditor()
   }
@@ -116,30 +113,6 @@ export class TerminalUI implements TUIRenderer {
     // 显示编辑器提示
     const hint = color("  Ctrl+C: Quit  •  Enter: Send  •  Ctrl+U: Clear", theme.statusBar)
     process.stdout.write(hint + "\n")
-  }
-
-  private renderStatusBar(): void {
-    const { rows, cols } = getTerminalSize()
-    const padding = this.maxWidth - 2
-
-    const statusContent = [
-      color("├", theme.border),
-      " ".repeat(padding),
-      color("│", theme.border),
-    ].join("")
-
-    // 底部状态栏
-    const bottomBar = [
-      "",
-      color("└" + "─".repeat(this.maxWidth - 2) + "┘", theme.border),
-      color(" ", theme.statusBar) +
-        color(` Session: ${this.sessionName} `.padEnd(25), theme.statusBarHighlight) +
-        color(`Model: ${this.modelName}`.padEnd(30), theme.statusBar) +
-        color(`Tokens: ${this.tokenCount} `.padStart(15), theme.statusBar) +
-        color(`Status: ${this.status}`, theme.statusBar),
-    ]
-
-    process.stdout.write(bottomBar.join("") + "\n")
   }
 
   private moveCursorToEditor(): void {
