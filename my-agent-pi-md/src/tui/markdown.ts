@@ -34,7 +34,23 @@ function isMarkdownTableRow(line: string): boolean {
 
 // 解析表格单元格
 function parseTableCells(line: string): string[] {
-  return line.split("|").slice(1, -1).map(c => c.trim())
+  // 移除首尾边框字符
+  const trimmed = line.trim()
+  const firstChar = trimmed[0]
+  const lastChar = trimmed[trimmed.length - 1]
+  
+  // 检查首尾是否是边框字符
+  const isFirstBorder = /[│|┃║├┬┴┼╔╗╚╝╠╬╣║┌└]/.test(firstChar)
+  const isLastBorder = /[│|┃║├┬┴┼╔╗╚╝╠╬╣║┐┘]/.test(lastChar)
+  
+  // 获取内部内容
+  const inner = trimmed.slice(isFirstBorder ? 1 : 0, isLastBorder ? -1 : undefined)
+  
+  // 分割内部内容
+  if (/[├┬┴┼╔╗╚╝╠╬╣║]/.test(inner)) {
+    return inner.split(/[│|┃║├┬┴┼╔╗╚╝╠╬╣║]/).filter(c => c.trim())
+  }
+  return inner.split("|").filter(c => c.trim())
 }
 
 // 渲染表格行
