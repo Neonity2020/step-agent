@@ -3,8 +3,8 @@
 // ============================================================
 
 // ANSI 转义序列
-const ESC = "\x1b"
-const CSI = `${ESC}[`
+const ESC = "\x1b";
+const CSI = `${ESC}[`;
 
 // 颜色代码
 export const colors = {
@@ -14,6 +14,7 @@ export const colors = {
   dim: `${CSI}2m`,
   italic: `${CSI}3m`,
   underline: `${CSI}4m`,
+  strikethrough: `${CSI}9m`,
 
   // 前景色
   black: `${CSI}30m`,
@@ -26,12 +27,14 @@ export const colors = {
   white: `${CSI}37m`,
 
   // 亮色
+  brightBlack: `${CSI}90m`,
   brightRed: `${CSI}91m`,
   brightGreen: `${CSI}92m`,
   brightYellow: `${CSI}93m`,
   brightBlue: `${CSI}94m`,
   brightMagenta: `${CSI}95m`,
   brightCyan: `${CSI}96m`,
+  brightWhite: `${CSI}97m`,
 
   // 背景色
   bgBlack: `${CSI}40m`,
@@ -42,7 +45,7 @@ export const colors = {
   bgMagenta: `${CSI}45m`,
   bgCyan: `${CSI}46m`,
   bgWhite: `${CSI}47m`,
-}
+};
 
 // 便捷函数
 export function color(text: string, color: string): string {
