@@ -1,0 +1,17 @@
+{
+  "name": "my-agent-phase2",
+  "version": "0.2.0",
+  "description": "Phase 2: Interactive TUI",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run ./src/cli/tui-cli.ts",
+    "dev:simple": "bun run ./src/cli/cli.ts",
+    "build": "bun build ./src/cli/tui-cli.ts --outdir=dist --target=bun",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "bun-types": "^1.0.0",
+    "typescript": "^5.3.0"
+  }
+}

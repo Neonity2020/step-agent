@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Agent - Web UI</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">🤖</div>
+        <div class="title">
+          <h1>My Agent</h1>
+          <span class="subtitle" id="model-info">Loading...</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-icon" id="btn-settings" title="Settings">
+          ⚙️
+        </button>
+        <button class="btn btn-icon" id="btn-theme" title="Toggle Theme">
+          🌙
+        </button>
+        <button class="btn btn-icon" id="btn-new-chat" title="New Chat">
+          ➕
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Sidebar (hidden on mobile) -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <h2>Chats</h2>
+          <button class="btn btn-small" id="btn-new-session">+ New</button>
+        </div>
+        <div class="sidebar-content" id="session-list">
+          <!-- Sessions will be loaded here -->
+          <div class="empty-state">
+            <p>No conversations yet</p>
+          </div>
+        </div>
+        <div class="sidebar-footer">
+          <div class="stats">
+            <span id="msg-count">0 messages</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Chat Area -->
+      <div class="chat-area">
+        <!-- Messages -->
+        <div class="messages" id="messages">
+          <!-- Welcome Message -->
+          <div class="welcome-message" id="welcome">
+            <div class="welcome-icon">👋</div>
+            <h2>Welcome to My Agent</h2>
+            <p>I'm an AI coding assistant with skills evolution, project context, and more.</p>
+            <div class="quick-actions">
+              <button class="quick-action" data-prompt="Help me write a new feature">
+                ✨ Write a feature
+              </button>
+              <button class="quick-action" data-prompt="Debug this code for me">
+                🐛 Debug code
+              </button>
+              <button class="quick-action" data-prompt="Review my recent changes">
+                🔍 Review changes
+              </button>
+              <button class="quick-action" data-prompt="Help me understand this codebase">
+                📚 Explore codebase
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+          <div class="input-container">
+            <textarea 
+              id="message-input" 
+              placeholder="Type your message... (Shift+Enter for new line, Enter to send)"
+              rows="1"
+            ></textarea>
+            <button class="btn btn-send" id="btn-send" title="Send">
+              ➤
+            </button>
+          </div>
+          <div class="input-hints">
+            <span class="hint">
+              <kbd>Enter</kbd> send
+            </span>
+            <span class="hint">
+              <kbd>Shift+Enter</kbd> new line
+            </span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Settings</h3>
+          <button class="btn btn-icon" id="btn-close-settings">✕</button>
+        </div>
+        <div class="modal-body">
+          <!-- Theme Selection -->
+          <div class="setting-group">
+            <label>Theme</label>
+            <div class="theme-selector">
+              <button class="theme-btn active" data-theme="dark">🌙 Dark</button>
+              <button class="theme-btn" data-theme="light">☀️ Light</button>
+              <button class="theme-btn" data-theme="nord">❄️ Nord</button>
+              <button class="theme-btn" data-theme="monokai">🍃 Monokai</button>
+            </div>
+          </div>
+
+          <!-- Model Selection -->
+          <div class="setting-group">
+            <label>Model Configuration</label>
+            <div class="model-info">
+              <p class="current-model" id="current-model">Not configured</p>
+              <p class="model-hint">Configure model in CLI with /model command</p>
+            </div>
+          </div>
+
+          <!-- About -->
+          <div class="setting-group">
+            <label>About</label>
+            <div class="about-info">
+              <p><strong>My Agent</strong> v1.0.0</p>
+              <p>Skills Evolution + Pi.md + SOUL.md</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-indicator" id="loading">
+      <div class="spinner"></div>
+      <span>Thinking...</span>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

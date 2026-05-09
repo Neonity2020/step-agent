@@ -1,0 +1,16 @@
+{
+  "name": "my-agent-phase3",
+  "version": "0.3.0",
+  "description": "Phase 3: Session Management (Persistent + Branching)",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run ./src/cli/session-cli.ts",
+    "dev:simple": "bun run ./src/cli/cli.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "bun-types": "^1.0.0",
+    "typescript": "^5.3.0"
+  }
+}

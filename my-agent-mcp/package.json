@@ -1,0 +1,17 @@
+{
+  "name": "my-agent-mcp",
+  "version": "0.7.0",
+  "description": "My Agent with MCP (Model Context Protocol) Support",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run ./src/cli/mcp-cli.ts",
+    "dev:standard": "bun run ./src/cli/cli.ts",
+    "dev:streaming": "bun run ./src/cli/streaming-cli.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "bun-types": "^1.0.0",
+    "typescript": "^5.3.0"
+  }
+}
