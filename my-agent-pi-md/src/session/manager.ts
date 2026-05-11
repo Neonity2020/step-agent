@@ -155,7 +155,10 @@ export class SessionManager {
     type: SessionEntry["type"],
     role: SessionEntry["role"],
     content: string,
-    options?: Partial<Pick<SessionEntry, "toolName" | "toolInput" | "toolResult" | "label">>
+    options?: Partial<Pick<
+      SessionEntry,
+      "toolName" | "toolCallId" | "toolCalls" | "toolInput" | "toolResult" | "thinking" | "label"
+    >>
   ): Promise<SessionEntry | null> {
     if (!this.currentSession) {
       console.error("No active session")

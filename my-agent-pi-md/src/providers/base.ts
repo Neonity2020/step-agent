@@ -2,14 +2,11 @@
 // Provider Base - Provider 接口定义
 // ============================================================
 
-import type { Message, ToolDefinition } from "../types/index.ts"
+import type { Message, ToolCall, ToolDefinition } from "../types/index.ts"
 
 export interface LLMResponse {
   content: string
-  toolCalls?: Array<{
-    name: string
-    input: Record<string, unknown>
-  }>
+  toolCalls?: ToolCall[]
   thinking?: string
 }
 

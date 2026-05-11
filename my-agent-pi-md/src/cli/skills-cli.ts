@@ -8,6 +8,7 @@ import { SessionManager } from "../session/session"
 import { ExtensionManager } from "../extensions"
 import { SkillsManager } from "../skills"
 import { color, theme } from "../tui/colors"
+import { renderMarkdown } from "../tui/markdown"
 import { MCPClientManager, loadMCPConfig, COMMON_MCP_SERVERS } from "../mcp"
 import { ThemeManager } from "../advanced/themes"
 import autoSavePlugin from "../extensions/plugins/auto-save"
@@ -171,7 +172,7 @@ async function main() {
 
       console.log(color("🤖 Assistant", theme.assistantPrefix))
       console.log(color("─".repeat(40), theme.border))
-      console.log(response.content)
+      console.log(renderMarkdown(response.content))
 
       // 保存响应
       await sessionManager.addEntry("assistant", "assistant", response.content)
@@ -216,7 +217,7 @@ async function main() {
           )
 
           await sessionManager.addEntry("assistant", "assistant", followUp.content)
-          console.log(followUp.content)
+          console.log(renderMarkdown(followUp.content))
         }
       }
 

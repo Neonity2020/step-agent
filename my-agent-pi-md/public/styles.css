@@ -403,6 +403,89 @@ html, body {
   border-bottom-left-radius: 4px;
 }
 
+.message-text h1,
+.message-text h2,
+.message-text h3 {
+  margin: 4px 0 8px;
+  line-height: 1.25;
+}
+
+.message-text h1 {
+  font-size: 20px;
+}
+
+.message-text h2 {
+  font-size: 17px;
+}
+
+.message-text h3 {
+  font-size: 15px;
+}
+
+.message-text p,
+.message-text ul,
+.message-text ol,
+.message-text pre,
+.message-text blockquote,
+.message-text table {
+  margin: 8px 0;
+}
+
+.message-text ul,
+.message-text ol {
+  padding-left: 22px;
+}
+
+.message-text pre {
+  overflow-x: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+}
+
+.message-text code {
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: var(--background);
+  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+  font-size: 0.92em;
+}
+
+.message-text pre code {
+  padding: 0;
+  background: transparent;
+}
+
+.message-text blockquote {
+  padding-left: 12px;
+  border-left: 3px solid var(--border);
+  color: var(--text-muted);
+}
+
+.message-text table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.message-text th,
+.message-text td {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.message-text th {
+  background: var(--surface);
+  font-weight: 600;
+}
+
+.message-text a {
+  color: var(--accent);
+}
+
 .message-tool-info {
   font-size: 11px;
   color: var(--text-muted);

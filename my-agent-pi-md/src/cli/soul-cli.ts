@@ -13,6 +13,7 @@ import { KnowledgeBase } from "../kb"
 import { PiMDParser, ProjectAnalyzer } from "../pimd"
 import { SoulMDParser, listPresets, generatePresetSoulMD } from "../soul"
 import { color, theme } from "../tui/colors"
+import { renderMarkdown } from "../tui/markdown"
 import { MCPClientManager, loadMCPConfig, COMMON_MCP_SERVERS } from "../mcp"
 import autoSavePlugin from "../extensions/plugins/auto-save"
 import gitPlugin from "../extensions/plugins/git"
@@ -192,7 +193,7 @@ Be ${existingSoulMD?.content ? SoulMDParser.parse(existingSoulMD.content).speaki
 
       console.log(color("\n🤖 Assistant", theme.assistantPrefix))
       console.log(color("─".repeat(40), theme.border))
-      console.log(response.content)
+      console.log(renderMarkdown(response.content))
 
       await sessionManager.addEntry("assistant", "assistant", response.content)
 

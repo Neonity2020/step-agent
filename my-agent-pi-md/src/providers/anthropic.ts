@@ -65,6 +65,10 @@ export class AnthropicProvider implements Provider {
       max_tokens: this.maxTokens,
       messages: this.formatMessages(messages),
     }
+    const system = this.getSystemPrompt(messages)
+    if (system) {
+      body.system = system
+    }
 
     if (tools && tools.length > 0) {
       body.tools = tools.map(tool => ({
@@ -102,6 +106,10 @@ export class AnthropicProvider implements Provider {
       messages: this.formatMessages(messages),
       stream: true,
     }
+    const system = this.getSystemPrompt(messages)
+    if (system) {
+      body.system = system
+    }
 
     if (tools && tools.length > 0) {
       body.tools = tools.map(tool => ({
@@ -137,7 +145,7 @@ export class AnthropicProvider implements Provider {
     let content = ""
     let thinking = ""
     const toolCalls: Array<{ name: string; input: Record<string, unknown>; id: string }> = []
-    let currentToolCall: { name: string; input: Record<string, unknown>; id: string } | null = null
+    let currentToolCall: { name: string; input: Record<string, unknown>; id: string; inputJson: string } | null = null
 
     try {
       while (true) {
@@ -170,9 +178,9 @@ export class AnthropicProvider implements Provider {
               } else if (json.delta?.type === "input_json_delta") {
                 // 工具输入增量
                 if (currentToolCall) {
+                  currentToolCall.inputJson += json.delta.partial_json ?? ""
                   try {
-                    const partial = JSON.parse(json.delta.partial_json)
-                    currentToolCall.input = { ...currentToolCall.input, ...partial }
+                    currentToolCall.input = JSON.parse(currentToolCall.inputJson)
                   } catch {
                     // 增量更新
                   }
@@ -192,6 +200,7 @@ export class AnthropicProvider implements Provider {
                   id: json.content_block.id,
                   name: json.content_block.name,
                   input: {},
+                  inputJson: "",
                 }
                 toolCalls.push(currentToolCall)
                 onEvent?.({ 
@@ -200,6 +209,18 @@ export class AnthropicProvider implements Provider {
                   index: toolCalls.length - 1,
                 })
               }
+            }
+
+            if (json.type === "content_block_stop" && currentToolCall) {
+              try {
+                currentToolCall.input = currentToolCall.inputJson
+                  ? JSON.parse(currentToolCall.inputJson)
+                  : currentToolCall.input
+              } catch {
+                currentToolCall.input = {}
+              }
+              onEvent?.({ type: "tool_call_end", toolName: currentToolCall.name })
+              currentToolCall = null
             }
 
             // message delta
@@ -231,9 +252,19 @@ export class AnthropicProvider implements Provider {
 
     return {
       content: content.trim(),
-      toolCalls: toolCalls.map(tc => ({ name: tc.name, input: tc.input })),
+      toolCalls: toolCalls.map(tc => ({ id: tc.id, name: tc.name, input: tc.input })),
       thinking: thinking || undefined,
     }
+  }
+
+  private getSystemPrompt(messages: Message[]): string | undefined {
+    const system = messages
+      .filter((msg) => msg.role === "system")
+      .map((msg) => msg.content)
+      .join("\n\n")
+      .trim()
+
+    return system || undefined
   }
 
   private formatMessages(messages: Message[]): Array<Record<string, unknown>> {
@@ -245,6 +276,14 @@ export class AnthropicProvider implements Provider {
       }
 
       if (msg.role === "tool") {
+        if (!msg.toolCallId) {
+          formatted.push({
+            role: "user",
+            content: `[Tool ${msg.toolName ?? "unknown"} result]\n${msg.content}`,
+          })
+          continue
+        }
+
         formatted.push({
           role: "user",
           content: [
@@ -254,6 +293,23 @@ export class AnthropicProvider implements Provider {
               content: msg.content,
             },
           ],
+        })
+      } else if (msg.role === "assistant" && msg.toolCalls?.length) {
+        const content: Array<Record<string, unknown>> = []
+        if (msg.content) {
+          content.push({ type: "text", text: msg.content })
+        }
+        for (const call of msg.toolCalls) {
+          content.push({
+            type: "tool_use",
+            id: call.id,
+            name: call.name,
+            input: call.input,
+          })
+        }
+        formatted.push({
+          role: msg.role,
+          content,
         })
       } else {
         formatted.push({
@@ -269,13 +325,14 @@ export class AnthropicProvider implements Provider {
   private parseResponse(data: AnthropicMessage): LLMResponse {
     let content = ""
     let thinking: string | undefined
-    const toolCalls: Array<{ name: string; input: Record<string, unknown> }> = []
+    const toolCalls: Array<{ id?: string; name: string; input: Record<string, unknown> }> = []
 
     for (const block of data.content) {
       if (block.type === "text") {
         content += block.text
       } else if (block.type === "tool_use") {
         toolCalls.push({
+          id: block.id,
           name: block.name,
           input: block.input,
         })

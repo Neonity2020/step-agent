@@ -192,7 +192,7 @@ function updateMessage(messageId, content) {
   if (msgEl) {
     const contentEl = msgEl.querySelector(".message-text");
     if (contentEl) {
-      contentEl.textContent = content;
+      contentEl.innerHTML = formatContent(content);
     }
   }
 }
@@ -231,11 +231,50 @@ function renderMessage(message) {
 }
 
 function formatContent(content) {
-  // Simple markdown-like formatting
+  // Safe, lightweight Markdown formatting for chat output.
   let formatted = escapeHtml(content);
 
   // Code blocks
   formatted = formatted.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+
+  // Tables
+  formatted = formatted.replace(/((?:^\|.*\|\n?)+)/gm, (match) => {
+    const rows = match.trim().split("\n");
+    if (rows.length < 2 || !/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(rows[1])) {
+      return match;
+    }
+
+    const cells = rows
+      .filter((_, index) => index !== 1)
+      .map((row) => row.replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim()));
+
+    const head = cells[0] || [];
+    const body = cells.slice(1);
+    return `<table><thead><tr>${head.map((cell) => `<th>${cell}</th>`).join("")}</tr></thead><tbody>${body
+      .map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`)
+      .join("")}</tbody></table>`;
+  });
+
+  // Headings
+  formatted = formatted.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+  formatted = formatted.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+  formatted = formatted.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+
+  // Blockquotes
+  formatted = formatted.replace(/^&gt; (.+)$/gm, "<blockquote>$1</blockquote>");
+
+  // Horizontal rules
+  formatted = formatted.replace(/^(?:---|\*\*\*)$/gm, "<hr>");
+
+  // Lists
+  formatted = formatted.replace(/(?:^[-*] .+(?:\n|$))+/gm, (match) => {
+    const items = match.trim().split("\n").map((line) => line.replace(/^[-*] /, ""));
+    return `<ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+  });
+  formatted = formatted.replace(/(?:^\d+\. .+(?:\n|$))+/gm, (match) => {
+    const items = match.trim().split("\n").map((line) => line.replace(/^\d+\. /, ""));
+    return `<ol>${items.map((item) => `<li>${item}</li>`).join("")}</ol>`;
+  });
 
   // Inline code
   formatted = formatted.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -245,6 +284,9 @@ function formatContent(content) {
 
   // Italic
   formatted = formatted.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+
+  // Links
+  formatted = formatted.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 
   // Line breaks
   formatted = formatted.replace(/\n/g, "<br>");

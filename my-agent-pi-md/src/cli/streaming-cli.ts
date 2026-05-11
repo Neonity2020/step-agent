@@ -7,6 +7,7 @@ import { ReadTool, WriteTool, EditTool, BashTool } from "../tools"
 import { SessionManager } from "../session/session"
 import { ExtensionManager } from "../extensions"
 import { color, theme } from "../tui/colors"
+import { renderMarkdown } from "../tui/markdown"
 import { StreamingUI, AnimatedStreamingUI } from "../tui/streaming-ui"
 import type { StreamCallback } from "../agent/agent"
 import autoSavePlugin from "../extensions/plugins/auto-save"
@@ -221,7 +222,7 @@ async function main() {
 
           await sessionManager.addEntry("assistant", "assistant", followUp.content)
           console.log(color("\n📝 Response:", theme.assistantPrefix))
-          console.log(followUp.content)
+          console.log(renderMarkdown(followUp.content))
         }
       }
 

@@ -95,7 +95,7 @@ function applyColor(text: string, colorCode: string): string {
 }
 
 export const defaultMarkdownTheme: MarkdownTheme = {
-	heading: (text: string) => applyColor(text, colors.bold + colors.brightCyan),
+	heading: (text: string) => applyColor(text, colors.bold + colors.yellow),
 	link: (text: string) => applyColor(text, colors.cyan + colors.underline),
 	linkUrl: (text: string) => applyColor(text, colors.dim),
 	code: (text: string) => applyColor(text, colors.yellow),

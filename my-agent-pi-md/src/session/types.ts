@@ -17,8 +17,11 @@ export interface SessionEntry {
   content: string         // 内容
   timestamp: string       // ISO 时间戳
   toolName?: string       // 工具名（tool 类型时）
+  toolCallId?: string     // 工具调用 ID（tool 类型时关联 assistant tool call）
+  toolCalls?: Array<{ id?: string; name: string; input: Record<string, unknown> }>
   toolInput?: Record<string, unknown>  // 工具输入
   toolResult?: string     // 工具结果
+  thinking?: string       // 模型思考内容（如果 provider 返回）
   label?: string          // 标签/书签
 }
 

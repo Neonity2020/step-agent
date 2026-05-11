@@ -12,10 +12,12 @@ export interface Message {
   name?: string           // tool result 时使用
   toolCallId?: string      // tool result 时关联
   toolName?: string        // tool result 时记录工具名
+  toolCalls?: ToolCall[]   // assistant 消息中的工具调用
 }
 
 // 工具调用 (LLM -> Agent)
 export interface ToolCall {
+  id?: string
   name: string
   input: Record<string, unknown>
 }

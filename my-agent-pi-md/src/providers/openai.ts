@@ -15,7 +15,7 @@ interface OpenAIConfig {
 // OpenAI API 响应类型
 interface OpenAIMessage {
   role: string
-  content: string | Array<OpenAIContentBlock>
+  content: string | Array<OpenAIContentBlock> | null
   tool_calls?: Array<{
     id: string
     type: string
@@ -83,22 +83,42 @@ export class OpenAIProvider implements Provider {
   }
 
   private formatMessages(messages: Message[]): OpenAIMessage[] {
-    return messages
-      .filter(msg => msg.role !== "system")
-      .map(msg => {
-        if (msg.role === "tool") {
+    return messages.map(msg => {
+      if (msg.role === "tool") {
+        if (!msg.toolCallId) {
           return {
-            role: "tool" as const,
-            content: msg.content,
-            tool_call_id: msg.toolCallId,
+            role: "user" as const,
+            content: `[Tool ${msg.toolName ?? "unknown"} result]\n${msg.content}`,
           }
         }
 
         return {
-          role: msg.role,
+          role: "tool" as const,
           content: msg.content,
+          tool_call_id: msg.toolCallId,
         }
-      })
+      }
+
+      if (msg.role === "assistant" && msg.toolCalls?.length) {
+        return {
+          role: msg.role,
+          content: msg.content || null,
+          tool_calls: msg.toolCalls.map((call) => ({
+            id: call.id ?? "",
+            type: "function",
+            function: {
+              name: call.name,
+              arguments: JSON.stringify(call.input),
+            },
+          })),
+        }
+      }
+
+      return {
+        role: msg.role,
+        content: msg.content,
+      }
+    })
   }
 
   private parseResponse(data: Record<string, unknown>): LLMResponse {
@@ -110,14 +130,15 @@ export class OpenAIProvider implements Provider {
     
     const message = choice.message
     const content = message?.content as string | null
-    const toolCalls = message?.tool_calls as Array<{ function: { name: string; arguments: string } }> | undefined
+    const toolCalls = message?.tool_calls as Array<{ id?: string; function: { name: string; arguments: string } }> | undefined
 
-    let parsedToolCalls: Array<{ name: string; input: Record<string, unknown> }> = []
+    let parsedToolCalls: LLMResponse["toolCalls"] = []
 
     if (toolCalls) {
       parsedToolCalls = toolCalls.map((tc) => {
         const fn = tc.function
         return {
+          id: tc.id,
           name: fn.name,
           input: JSON.parse(fn.arguments),
         }

@@ -9,6 +9,7 @@ import { ExtensionManager } from "../extensions"
 import { SkillsManager } from "../skills"
 import { KnowledgeBase } from "../kb"
 import { color, theme } from "../tui/colors"
+import { renderMarkdown } from "../tui/markdown"
 import { MCPClientManager, loadMCPConfig, COMMON_MCP_SERVERS } from "../mcp"
 import { ThemeManager } from "../advanced/themes"
 import autoSavePlugin from "../extensions/plugins/auto-save"
@@ -147,7 +148,7 @@ IMPORTANT: When you complete a significant task or make an important decision, s
 
       console.log(color("\n🤖 Assistant", theme.assistantPrefix))
       console.log(color("─".repeat(40), theme.border))
-      console.log(response.content)
+      console.log(renderMarkdown(response.content))
 
       await sessionManager.addEntry("assistant", "assistant", response.content)
 

@@ -2,7 +2,7 @@
 // Agent Core - Agent 核心逻辑（支持流式输出）
 // ============================================================
 
-import type { Message, ExecutionContext } from "../types"
+import type { Message, ExecutionContext, ToolCall } from "../types"
 import type { Provider } from "../providers/base"
 import type { Tool } from "../tools/base"
 import type { SessionManager, Session, SessionEntry } from "../session/session"
@@ -241,8 +241,9 @@ export class Agent {
         // 保存工具结果
         await this.sessionManager?.addEntry("tool", "tool", toolContent, {
           toolName: call.name,
+          toolCallId: call.id,
           toolInput: call.input,
-          toolResult: result.content,
+          toolResult: toolContent,
         })
 
         this.extensions?.triggerEvent("after_tool", {
@@ -272,6 +273,11 @@ export class Agent {
     if (!anthropicProvider.streamChat) {
       // 不支持流式，降级到普通模式
       const response = await this.provider.chat(allMessages, toolDefs)
+      response.toolCalls = this.normalizeToolCalls(response.toolCalls)
+      await this.saveToSession("assistant", "assistant", response.content, {
+        toolCalls: response.toolCalls,
+        thinking: response.thinking,
+      })
       onStream({ type: "text", content: response.content })
       return
     }
@@ -305,9 +311,13 @@ export class Agent {
     }
 
     const response = await anthropicProvider.streamChat(allMessages, toolDefs, handleEvent)
+    response.toolCalls = this.normalizeToolCalls(response.toolCalls)
 
     // 保存 assistant 响应到会话
-    await this.saveToSession("assistant", "assistant", response.content)
+    await this.saveToSession("assistant", "assistant", response.content, {
+      toolCalls: response.toolCalls,
+      thinking: response.thinking,
+    })
   }
 
   // 调用 LLM（普通模式）
@@ -320,18 +330,20 @@ export class Agent {
     }
 
     const response = await this.provider.chat(allMessages, toolDefs)
+    response.toolCalls = this.normalizeToolCalls(response.toolCalls)
     
     // 保存到会话
-    await this.saveToSession("assistant", "assistant", response.content)
+    await this.saveToSession("assistant", "assistant", response.content, {
+      toolCalls: response.toolCalls,
+      thinking: response.thinking,
+    })
     
     return response
   }
 
   // 从会话条目提取工具调用
-  private extractToolCalls(entry: SessionEntry): Array<{ name: string; input: Record<string, unknown> }> {
-    // 简化实现：检查内容中是否提到工具
-    // 实际应该从 entry.toolInput 中获取
-    return []
+  private extractToolCalls(entry: SessionEntry): ToolCall[] {
+    return entry.toolCalls ?? []
   }
 
   // 获取所有消息（包含 system prompt）
@@ -352,12 +364,14 @@ export class Agent {
         msgs.push({
           role: entry.role,
           content: entry.content,
+          toolCalls: entry.toolCalls,
         })
       } else if (entry.type === "tool") {
         msgs.push({
           role: "tool",
           content: entry.toolResult ?? entry.content,
           toolName: entry.toolName,
+          toolCallId: entry.toolCallId,
         })
       }
     }
@@ -374,6 +388,8 @@ export class Agent {
         content: e.content,
         name: e.toolName,
         toolName: e.toolName,
+        toolCallId: e.toolCallId,
+        toolCalls: e.toolCalls,
       } as Message))
   }
 
@@ -419,10 +435,24 @@ export class Agent {
   }
 
   // 保存到会话
-  private async saveToSession(type: SessionEntry["type"], role: SessionEntry["role"], content: string): Promise<void> {
+  private async saveToSession(
+    type: SessionEntry["type"],
+    role: SessionEntry["role"],
+    content: string,
+    options?: Partial<Pick<SessionEntry, "toolCalls" | "thinking">>
+  ): Promise<void> {
     if (!this.sessionManager) return
 
-    await this.sessionManager.addEntry(type, role, content)
+    await this.sessionManager.addEntry(type, role, content, options)
+  }
+
+  private normalizeToolCalls(toolCalls?: ToolCall[]): ToolCall[] | undefined {
+    if (!toolCalls?.length) return undefined
+
+    return toolCalls.map((call, index) => ({
+      ...call,
+      id: call.id ?? `tool_${Date.now()}_${this.iterationCount}_${index}`,
+    }))
   }
 
   // 消费 steering 消息
@@ -478,6 +508,8 @@ Be concise and practical. Use tools when needed to accomplish tasks.`
         content: e.content,
         name: e.toolName,
         toolName: e.toolName,
+        toolCallId: e.toolCallId,
+        toolCalls: e.toolCalls,
       } as Message))
   }
 
